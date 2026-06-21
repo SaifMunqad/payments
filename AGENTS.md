@@ -38,6 +38,12 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
 - Check for existing components to reuse before writing a new one.
+ 
+ ## Sail & Components (project-specific)
+
+- This project uses Laravel Sail for local development and container management. Prefer running commands through Sail (for example `./vendor/bin/sail artisan`, `./vendor/bin/sail npm`, `./vendor/bin/sail composer`) so the environment matches other developers and CI. Do not run services with the host PHP server when Sail is available.
+- Always look for and reuse existing frontend components (for example in `resources/js/components` and `resources/js/pages`) before creating new UI pieces. Compose and extend existing components rather than duplicating markup or logic.
+- Avoid creating new persistent data fixtures or ad-hoc datasets when a suitable factory, seeder, or shared component exists. Prefer using the project's existing factories/seeders/components for test and development data to keep data consistent across environments.
 
 ## Verification Scripts
 
