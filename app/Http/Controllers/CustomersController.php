@@ -7,23 +7,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use Illuminate\Support\Facades\DB;
 
 class CustomersController extends Controller
 {
     public function index()
     {
-        // Check if user is authenticated
-        $user = Auth::user();
-        if (!$user) {
-            return redirect('/login');
-        }
 
         // Fetch all customers from the database
         $customers = Customer::all();
 
         // Return the customers to the view
-        return Inertia::render('Dashboard/Customers', [
+        return inertia('customers/customer-list', [
             'customers' => $customers,
         ]);
     }
@@ -32,19 +26,19 @@ class CustomersController extends Controller
     {
         // Check if user is admin
         $user = Auth::user();
-        if (!$user || !$user->roles->contains('admin')) {
+        if (! $user || ! $user->roles->contains('admin')) {
             return redirect('/dashboard');
         }
 
         // Return the customers to the view
-        return Inertia::render('Dashboard/CreateCustomer');
+        return Inertia::render('dashboard/create-customer');
     }
 
     public function store(Request $request)
     {
         // Check if user is admin
         $user = Auth::user();
-        if (!$user || !$user->roles->contains('admin')) {
+        if (! $user || ! $user->roles->contains('admin')) {
             return redirect('/dashboard');
         }
 
@@ -67,7 +61,7 @@ class CustomersController extends Controller
     {
         // Check if user is admin
         $user = Auth::user();
-        if (!$user || !$user->roles->contains('admin')) {
+        if (! $user || ! $user->roles->contains('admin')) {
             return redirect('/dashboard');
         }
 
@@ -79,7 +73,7 @@ class CustomersController extends Controller
         // Process the file
         $file = $request->file('file');
         $filePath = $file->getRealPath();
-        
+
         // Process CSV or Excel file
         if ($file->getClientOriginalExtension() === 'csv') {
             // Process CSV file
@@ -92,7 +86,7 @@ class CustomersController extends Controller
         }
 
         // Return the data to the view
-        return Inertia::render('Dashboard/ImportCustomers', [
+        return Inertia::render('dashboard/import-customers', [
             'previewData' => $data,
             'file' => $file,
         ]);
