@@ -22,9 +22,18 @@ return new class extends Migration
 
             $table->rememberToken();
             $table->timestamps();
+
+            $table->softDeletes();
         });
 
-
+        DB::table('users')->insert([
+            'name' => 'admin',
+            'email' => 'admin@admin.com',
+            'password' => bcrypt('Admin1234'),
+            'role' => 'admin',
+            'created_at' => now(),
+            'email_verified_at' => now(),
+        ]);
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
