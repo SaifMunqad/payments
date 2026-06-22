@@ -1,0 +1,9 @@
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../wayfinder'
+import customersNamespace from './customers'
+
+// Re-export named helper for customers namespace so consumer code can import
+// `customers` from '@/routes'. The generated customers namespace file exports a
+// default object with a `customers` property — expose it here as a top-level
+// named export to match existing frontend imports.
+export const customers = customersNamespace.customers
+

@@ -1,18 +1,19 @@
 import { useState } from 'react';
+import { useForm } from '@inertiajs/react';
 import Modal from '@/components/modal/modal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-
 interface Customer {
     id: number;
-    name: string;
-    email: string;
-    phone?: string | null;
-    address?: string | null;
+    username: string;
+    customer_id: number;
+    firstname: string;
+    lastname: string;
     created_at: string;
+    updated_at: string;
 }
 
 interface Props {
@@ -23,84 +24,69 @@ function Customers({ customers = [] }: Props) {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
 
-    // Create customer form state
-    const [formData, setFormData] = useState({ name: '', email: '', phone: '', address: '' });
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    // Create customer form using Inertia useForm
+    const createForm = useForm({
+        username: '',
+        customer_id: '',
+        firstname: '',
+        lastname: '',
+    });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        createForm.setData(e.target.name, e.target.value);
     };
 
-    const submitCreate = async (e: React.FormEvent) => {
+    const submitCreate = (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSubmitting(true);
 
-        try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            const res = await fetch('/customers', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                },
-                body: JSON.stringify(formData),
-            });
-
-            if (!res.ok) {
-                throw new Error('Failed to create customer');
-            }
-
-            // Close modal and reload to show the new customer
-            setShowCreateModal(false);
-            window.location.reload();
-        } catch (err) {
-            // TODO: show error to user
-            console.error(err);
-            setIsSubmitting(false);
-        }
+        createForm.post('/customers', {
+            onSuccess: () => {
+                setShowCreateModal(false);
+                createForm.reset();
+            },
+            onError: (errors) => {
+                console.error('Validation errors:', errors);
+            },
+        });
     };
 
-    // Import customers state
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
+    const handleCloseCreateModal = () => {
+        setShowCreateModal(false);
+        createForm.reset();
+    };
+
+    // Import form using Inertia useForm
+    const importForm = useForm({
+        file: null as File | null,
+    });
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
-        setSelectedFile(file);
+        importForm.setData('file', file);
     };
 
-    const submitImport = async (e: React.FormEvent) => {
+    const submitImport = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!selectedFile) {
+        if (!importForm.data.file) {
             return;
         }
 
-        setIsUploading(true);
+        importForm.post('/customers/import', {
+            forceFormData: true,
+            onSuccess: () => {
+                setShowImportModal(false);
+                importForm.reset();
+            },
+            onError: (errors) => {
+                console.error('Import errors:', errors);
+            },
+        });
+    };
 
-        try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            const fd = new FormData();
-            fd.append('file', selectedFile as Blob);
-
-            const res = await fetch('/customers/import', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': token,
-                },
-                body: fd,
-            });
-
-            if (!res.ok) {
-                throw new Error('Import failed');
-            }
-
-            setShowImportModal(false);
-            window.location.reload();
-        } catch (err) {
-            console.error(err);
-            setIsUploading(false);
-        }
+    const handleCloseImportModal = () => {
+        setShowImportModal(false);
+        importForm.reset();
     };
 
     return (
@@ -113,7 +99,10 @@ function Customers({ customers = [] }: Props) {
                             <Button onClick={() => setShowCreateModal(true)}>
                                 Add Customer
                             </Button>
-                            <Button variant="outline" onClick={() => setShowImportModal(true)}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowImportModal(true)}
+                            >
                                 Import Customers
                             </Button>
                         </div>
@@ -128,29 +117,62 @@ function Customers({ customers = [] }: Props) {
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead>
-                                            <tr className="border-b text-left">
-                                                <th className="px-3 py-2">Name</th>
-                                                <th className="px-3 py-2">Email</th>
-                                                <th className="px-3 py-2">Phone</th>
-                                                <th className="px-3 py-2">Address</th>
-                                                <th className="px-3 py-2">Created</th>
-                                            </tr>
+                                        <tr className="border-b text-left">
+                                            <th className="px-3 py-2">
+                                                ID
+                                            </th>
+                                            <th className="px-3 py-2">
+                                                Customer ID
+                                            </th>
+                                            <th className="px-3 py-2">
+                                                Username
+                                            </th>
+                                            <th className="px-3 py-2">
+                                                First Name
+                                            </th>
+                                            <th className="px-3 py-2">
+                                                Last Name
+                                            </th>
+                                            <th className="px-3 py-2">
+                                                Created
+                                            </th>
+                                        </tr>
                                         </thead>
                                         <tbody>
-                                            {customers.map((customer) => (
-                                                <tr key={customer.id} className="border-b last:border-b-0">
-                                                    <td className="px-3 py-2">{customer.name}</td>
-                                                    <td className="px-3 py-2">{customer.email}</td>
-                                                    <td className="px-3 py-2">{customer.phone ?? '—'}</td>
-                                                    <td className="px-3 py-2">{customer.address ?? '—'}</td>
-                                                    <td className="px-3 py-2">{new Date(customer.created_at).toLocaleDateString()}</td>
-                                                </tr>
-                                            ))}
+                                        {customers.map((customer) => (
+                                            <tr
+                                                key={customer.id}
+                                                className="border-b last:border-b-0"
+                                            >
+                                                <td className="px-3 py-2">
+                                                    {customer.id}
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    {customer.customer_id}
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    {customer.username}
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    {customer.firstname}
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    {customer.lastname}
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    {new Date(
+                                                        customer.created_at,
+                                                    ).toLocaleDateString()}
+                                                </td>
+                                            </tr>
+                                        ))}
                                         </tbody>
                                     </table>
                                 </div>
                             ) : (
-                                <p className="text-sm text-muted-foreground">No customers found.</p>
+                                <p className="text-sm text-muted-foreground">
+                                    No customers found.
+                                </p>
                             )}
                         </CardContent>
                     </Card>
@@ -158,34 +180,101 @@ function Customers({ customers = [] }: Props) {
             </>
 
             {/* Create Customer Modal */}
-            <Modal visible={showCreateModal} onClose={() => setShowCreateModal(false)} size="md">
+            <Modal
+                visible={showCreateModal}
+                onClose={handleCloseCreateModal}
+                size="md"
+            >
                 <div className="mx-auto max-w-2xl">
                     <div>
-                        <h2 className="text-xl font-semibold mb-4">Create New Customer</h2>
+                        <h2 className="mb-4 text-xl font-semibold">
+                            Create New Customer
+                        </h2>
                         <form className="space-y-4" onSubmit={submitCreate}>
                             <div className="space-y-2">
-                                <Label htmlFor="name">Name</Label>
-                                <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Customer name" required />
+                                <Label htmlFor="username">Username</Label>
+                                <Input
+                                    id="username"
+                                    name="username"
+                                    value={createForm.data.username}
+                                    onChange={handleChange}
+                                    placeholder="Enter username"
+                                    required
+                                />
+                                {createForm.errors.username && (
+                                    <p className="text-sm text-red-500">
+                                        {createForm.errors.username}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="email">Email</Label>
-                                <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="customer@example.com" required />
+                                <Label htmlFor="customer_id">Customer ID</Label>
+                                <Input
+                                    id="customer_id"
+                                    name="customer_id"
+                                    type="number"
+                                    value={createForm.data.customer_id}
+                                    onChange={handleChange}
+                                    placeholder="Enter customer ID"
+                                    required
+                                />
+                                {createForm.errors.customer_id && (
+                                    <p className="text-sm text-red-500">
+                                        {createForm.errors.customer_id}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="phone">Phone</Label>
-                                <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="(123) 456-7890" />
+                                <Label htmlFor="firstname">First Name</Label>
+                                <Input
+                                    id="firstname"
+                                    name="firstname"
+                                    value={createForm.data.firstname}
+                                    onChange={handleChange}
+                                    placeholder="Enter first name"
+                                    maxLength={50}
+                                    required
+                                />
+                                {createForm.errors.firstname && (
+                                    <p className="text-sm text-red-500">
+                                        {createForm.errors.firstname}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="address">Address</Label>
-                                <Input id="address" name="address" value={formData.address} onChange={handleChange} placeholder="123 Main St, City" />
+                                <Label htmlFor="lastname">Last Name</Label>
+                                <Input
+                                    id="lastname"
+                                    name="lastname"
+                                    value={createForm.data.lastname}
+                                    onChange={handleChange}
+                                    placeholder="Enter last name"
+                                    maxLength={50}
+                                    required
+                                />
+                                {createForm.errors.lastname && (
+                                    <p className="text-sm text-red-500">
+                                        {createForm.errors.lastname}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="flex justify-end space-x-2 pt-4">
-                                <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
-                                <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Creating...' : 'Create Customer'}</Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleCloseCreateModal}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button type="submit" disabled={createForm.processing}>
+                                    {createForm.processing
+                                        ? 'Creating...'
+                                        : 'Create Customer'}
+                                </Button>
                             </div>
                         </form>
                     </div>
@@ -193,18 +282,49 @@ function Customers({ customers = [] }: Props) {
             </Modal>
 
             {/* Import Customers Modal */}
-            <Modal visible={showImportModal} onClose={() => setShowImportModal(false)} size="xl">
-                <div className="max-w-3xl mx-auto">
-                    <h2 className="text-xl font-semibold mb-4">Import Customers</h2>
+            <Modal
+                visible={showImportModal}
+                onClose={handleCloseImportModal}
+                size="xl"
+            >
+                <div className="mx-auto max-w-3xl">
+                    <h2 className="mb-4 text-xl font-semibold">
+                        Import Customers
+                    </h2>
                     <form onSubmit={submitImport} className="space-y-6">
                         <div>
                             <Label htmlFor="file">File Upload</Label>
-                            <input id="file" name="file" type="file" accept=".csv,.xlsx,.xls" onChange={handleFileChange} className="block mt-2" />
+                            <input
+                                id="file"
+                                name="file"
+                                type="file"
+                                accept=".csv,.xlsx,.xls"
+                                onChange={handleFileChange}
+                                className="mt-2 block"
+                            />
+                            {importForm.errors.file && (
+                                <p className="text-sm text-red-500 mt-1">
+                                    {importForm.errors.file}
+                                </p>
+                            )}
                         </div>
 
                         <div className="flex justify-end space-x-2 pt-4">
-                            <Button type="button" variant="outline" onClick={() => setShowImportModal(false)}>Cancel</Button>
-                            <Button type="submit" disabled={!selectedFile || isUploading}>{isUploading ? 'Importing...' : 'Import Customers'}</Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleCloseImportModal}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={!importForm.data.file || importForm.processing}
+                            >
+                                {importForm.processing
+                                    ? 'Importing...'
+                                    : 'Import Customers'}
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -213,7 +333,7 @@ function Customers({ customers = [] }: Props) {
     );
 }
 
-//Customers.layout = (page) => <AppLayout children={page} />;
+// Customers.layout = (page) => <AppLayout children={page} />;
 Customers.layout = {
     breadcrumbs: [
         {
@@ -222,4 +342,5 @@ Customers.layout = {
         },
     ],
 };
+
 export default Customers;

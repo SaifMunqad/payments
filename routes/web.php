@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\System\PackageController;
+use App\Models\CustomerPackage;
+use App\Models\Package;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,9 +32,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Packages and Payments pages (rendered by Inertia). The page components
     // should live at resources/js/pages/packages/package-list and
     // resources/js/pages/payments/payment-list respectively.
-    Route::get('packages', function () {
-        return inertia('packages/package-list');
-    })->name('packages');
+    Route::get('packages', [PackageController::class, 'index'])->name('packages');
+    Route::post('packages', [PackageController::class, 'store'])->name('packages.store');
+
+    // Create a new package (used by the frontend modal). Simple closure for now
+    // so we don't need to add a controller file. Validates input and creates
+    // a Package record.
+    /*Route::post('packages', function (Request $request) {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'price' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        Package::create([
+            'name' => $data['name'],
+            'price' => (int) round($data['price']),
+        ]);
+
+        return redirect()->route('packages');
+    })->name('packages.store');*/
 
     Route::get('payments', function () {
         return inertia('payments/payment-list');

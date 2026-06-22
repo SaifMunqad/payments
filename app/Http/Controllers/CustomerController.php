@@ -30,25 +30,20 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
-        // Check if user is admin
-        $user = Auth::user();
-        if (! $user || ! $user->roles->contains('admin')) {
-            return redirect('/dashboard');
-        }
-
         // Validate the request
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
+            'username' => 'required|string|max:255|unique:customers,username',
+            'customer_id' => 'required|integer|min:0|max:65535',
+            'firstname' => 'required|string|max:50',
+            'lastname' => 'required|string|max:50',
         ]);
 
         // Create the customer
-        $customer = Customer::create($validated);
+        Customer::create($validated);
 
-        // Redirect back to customers page with success message
-        return redirect()->route('customers')->with('success', 'Customer created successfully');
+        // Redirect back with success message
+        return redirect()->back()->with('success', 'Customer created successfully.');
+
     }
 
     public function storeImport(Request $request)
