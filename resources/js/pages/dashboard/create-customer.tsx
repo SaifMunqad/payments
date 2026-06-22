@@ -42,9 +42,8 @@ function CreateCustomer() {
     };
 
     return (
-        <AppShell>
-            <AppHeader title="Create Customer" />
-            <AppContent>
+        <>
+            <>
                 <div className="mx-auto max-w-2xl">
                     <Card>
                         <CardHeader>
@@ -102,7 +101,7 @@ function CreateCustomer() {
 
                                 <div className="flex justify-end space-x-2 pt-4">
                                     <Button type="button" variant="outline" asChild>
-                                        <Link href={route('customers')}>Cancel</Link>
+                                        <Link href={'/customers/'}>Cancel</Link>
                                     </Button>
                                     <Button type="submit" disabled={isSubmitting}>
                                         {isSubmitting ? 'Creating...' : 'Create Customer'}
@@ -112,8 +111,8 @@ function CreateCustomer() {
                         </CardContent>
                     </Card>
                 </div>
-            </AppContent>
-        </AppShell>
+            </>
+        </>
     );
 }
 

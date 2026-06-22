@@ -2,13 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { Page } from '@/types';
 import AppLayout from '@/layouts/app-layout';
-import { AppShell } from '@/components/app-shell';
-import { AppHeader } from '@/components/app-header';
-import { AppContent } from '@/components/app-content';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Customer {
@@ -24,7 +19,6 @@ interface Props {
 }
 
 const ImportCustomers: Page<Props> = ({ previewData, file }) => {
-    const { auth } = usePage().props;
     const [selectedFile, setSelectedFile] = useState<File | null>(file || null);
     const [preview, setPreview] = useState<(string | number)[][]>(previewData || []);
     const [isUploading, setIsUploading] = useState(false);
@@ -70,19 +64,19 @@ const ImportCustomers: Page<Props> = ({ previewData, file }) => {
         if (file.type === 'text/csv') {
             // Process CSV file
             const reader = new FileReader();
-            
+
             reader.onload = (e) => {
                 const text = e.target?.result as string;
                 const rows = text.split('\n').slice(0, 5);
                 const data = rows.map(row => row.split(','));
                 setPreview(data);
             };
-            
+
             reader.readAsText(file);
         } else {
             // Process Excel file
             const reader = new FileReader();
-            
+
             reader.onload = (e) => {
                 const data = new Uint8Array(e.target?.result as ArrayBuffer);
                 const workbook = XLSX.read(data, { type: 'array' });
@@ -91,24 +85,24 @@ const ImportCustomers: Page<Props> = ({ previewData, file }) => {
                 const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 setPreview(json.slice(0, 5) as (string | number)[][]);
             };
-            
+
             reader.readAsArrayBuffer(file);
         }
     };
 
     const handleUpload = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!selectedFile) {
             setError('Please select a file to upload');
             return;
         }
-        
+
         setIsUploading(true);
         setUploadProgress(0);
         setError('');
         setSuccess('');
-        
+
         // Simulate upload progress
         const interval = setInterval(() => {
             setUploadProgress(prev => {
@@ -124,9 +118,9 @@ const ImportCustomers: Page<Props> = ({ previewData, file }) => {
     };
 
     return (
-        <AppShell>
-            <AppHeader title="Import Customers" />
-            <AppContent>
+        <>
+            {/*<AppHeader title="Import Customers" />*/}
+            <>
                 <div className="max-w-3xl mx-auto">
                     <Card>
                         <CardHeader>
@@ -140,11 +134,11 @@ const ImportCustomers: Page<Props> = ({ previewData, file }) => {
                                         Upload a CSV or Excel file containing customer data. The file must contain the following columns:
                                         name, email, phone, address
                                     </p>
-                                    
-                                    <div 
+
+                                    <div
                                         className={`border-2 border-dashed rounded-lg p-8 text-center ${
-                                            error ? 'border-red-500 bg-red-50' : 
-                                            isUploading ? 'border-blue-500 bg-blue-50' : 
+                                            error ? 'border-red-500 bg-red-50' :
+                                            isUploading ? 'border-blue-500 bg-blue-50' :
                                             'border-gray-300'
                                         }`}
                                         onDragEnter={(e) => e.preventDefault()}
@@ -160,9 +154,9 @@ const ImportCustomers: Page<Props> = ({ previewData, file }) => {
                                             className="hidden"
                                             onChange={handleFileChange}
                                         />
-                                        
-                                        <label 
-                                            htmlFor="file-upload" 
+
+                                        <label
+                                            htmlFor="file-upload"
                                             className="cursor-pointer flex flex-col items-center"
                                         >
                                             <svg
@@ -187,7 +181,7 @@ const ImportCustomers: Page<Props> = ({ previewData, file }) => {
                                             </span>
                                         </label>
                                     </div>
-                                    
+
                                     {error && (
                                         <Alert variant="destructive" className="mt-4">
                                             <AlertDescription>{error}</AlertDescription>
@@ -228,8 +222,8 @@ const ImportCustomers: Page<Props> = ({ previewData, file }) => {
                                     <Button type="button" variant="outline" asChild>
                                         <Link href="/customers">Cancel</Link>
                                     </Button>
-                                    <Button 
-                                        type="submit" 
+                                    <Button
+                                        type="submit"
                                         disabled={!selectedFile || isUploading}
                                         onClick={handleUpload}
                                     >
@@ -260,7 +254,7 @@ const ImportCustomers: Page<Props> = ({ previewData, file }) => {
                                         ) : 'Import Customers'}
                                     </Button>
                                 </div>
-                                
+
                                 {isUploading && (
                                     <div className="mt-4">
                                         <div className="relative pt-1">
@@ -278,7 +272,7 @@ const ImportCustomers: Page<Props> = ({ previewData, file }) => {
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 {success && (
                                     <div className="mt-4">
                                         <Alert variant="success">
@@ -290,8 +284,8 @@ const ImportCustomers: Page<Props> = ({ previewData, file }) => {
                         </CardContent>
                     </Card>
                 </div>
-            </AppContent>
-        </AppShell>
+            </>
+        </>
     );
 };
 

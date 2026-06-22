@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
-class CustomersController extends Controller
+class CustomerController extends Controller
 {
     public function index()
     {
@@ -24,12 +24,6 @@ class CustomersController extends Controller
 
     public function create()
     {
-        // Check if user is admin
-        $user = Auth::user();
-        if (! $user || ! $user->roles->contains('admin')) {
-            return redirect('/dashboard');
-        }
-
         // Return the customers to the view
         return Inertia::render('dashboard/create-customer');
     }
@@ -57,13 +51,8 @@ class CustomersController extends Controller
         return redirect()->route('customers')->with('success', 'Customer created successfully');
     }
 
-    public function import(Request $request)
+    public function storeImport(Request $request)
     {
-        // Check if user is admin
-        $user = Auth::user();
-        if (! $user || ! $user->roles->contains('admin')) {
-            return redirect('/dashboard');
-        }
 
         // Validate the request
         $request->validate([
@@ -90,5 +79,10 @@ class CustomersController extends Controller
             'previewData' => $data,
             'file' => $file,
         ]);
+    }
+
+    public function createImport()
+    {
+        return inertia('dashboard/import-customers');
     }
 }
